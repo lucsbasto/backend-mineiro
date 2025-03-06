@@ -3,18 +3,20 @@ package services
 import (
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lucsbasto/backend-mineiro/models"
 	"github.com/lucsbasto/backend-mineiro/repositories"
 	"github.com/lucsbasto/backend-mineiro/services/utils"
+	"github.com/lucsbasto/backend-mineiro/types"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService interface {
-	SignIn(username string, password string) (string, error)
-	SignUp(username, password string) (*models.User, error)
+	SignIn(username, password string) (string, error)
+	SignUp(data types.SignUpDTO) (*models.User, error)
 }
 
 type authService struct {
@@ -25,28 +27,25 @@ func NewAuthService(userRepository repositories.UserRepository) AuthService{
 	return &authService{userRepository: userRepository}
 }
 
-func (s *authService) SignUp(username, password string) (*models.User, error) {
-	user, err := s.userRepository.FindByUsername(username)
-	print(user, err)
-	if err == nil { 
-		return nil, err
-	}
-
-	if user != nil {
+func (s *authService) SignUp(data types.SignUpDTO) (*models.User, error) {
+	user, err := s.userRepository.FindByUsername(data.Username)
+	fmt.Printf("User: %+v\n", user)
+	if err == nil && user != nil {
 		return nil, errors.New("username already exists")
 	}
 
-	hashedPassword, err := utils.HashPassword(password)
+	hashedPassword, err := utils.HashPassword(data.Password)
 	if err != nil {
 		return nil, err
 	}
 
 	user = &models.User{
-		Username: username,
+		Username: data.Username,
+		Name:     data.Name,
 		Password: string(hashedPassword),
+		IsAdmin:  data.IsAdmin,
 	}
-	fmt.Print(user)
-	if err := s.userRepository.Create(user); err != nil {
+	if err := s.userRepository.CreateUser(user); err != nil {
 		return nil, err
 	}
 
@@ -73,11 +72,14 @@ func generateJWT(user *models.User)(string, error) {
 	claims := jwt.MapClaims{
 		"sub": user.ID,
 		"username": user.Username,
+		"name": user.Name,
+		"isAdmin": user.IsAdmin,
 		"iat": time.Now().Unix(),
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokensString, err := token.SignedString([]byte("secret_key"))
+	secret := os.Getenv("JWT_SECRET")
+	tokensString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		return "", err
 	}

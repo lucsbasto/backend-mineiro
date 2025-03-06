@@ -12,18 +12,13 @@ import (
 
 var DB *gorm.DB
 
+// Connect estabelece a conexão com o banco de dados.
 func Connect() {
-	dbHost := os.Getenv("DATABASE_HOST")
-	dbUser := os.Getenv("DATABASE_USER")
-	dbPassword := os.Getenv("DATABASE_PASSWORD")
-	dbName := os.Getenv("DATABASE_NAME")
-	dbPort := os.Getenv("DATABASE_PORT")
-
-	if dbHost == "" || dbName == "" || dbPassword == "" || dbPort == "" || dbUser  == "" {
-		log.Fatal("❌ Algumas variáveis de ambiente não estão definidas! Verifique POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_HOST, POSTGRES_PORT")
+	dsn, err := getDSN()
+	if err != nil {
+		log.Fatal(err)
 	}
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost,dbPort, dbUser, dbPassword, dbName)
-	fmt.Println( dbHost,dbPort, dbUser, dbPassword, dbName, dsn)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("❌ Erro ao conectar ao banco de dados:", err)
@@ -32,9 +27,28 @@ func Connect() {
 	DB = db
 	fmt.Println("✅ Conectado ao banco de dados com sucesso!")
 
-	// Executar migrações automaticamente
-	err = db.AutoMigrate(&models.Product{}, &models.User{}, &models.Sales{})
+	err = runMigrations(db)
 	if err != nil {
 		log.Fatal("❌ Erro ao rodar migrations:", err)
 	}
+}
+
+// getDSN constrói a string de conexão DSN a partir das variáveis de ambiente.
+func getDSN() (string, error) {
+	dbHost := os.Getenv("DATABASE_HOST")
+	dbUser := os.Getenv("DATABASE_USER")
+	dbPassword := os.Getenv("DATABASE_PASSWORD")
+	dbName := os.Getenv("DATABASE_NAME")
+	dbPort := os.Getenv("DATABASE_PORT")
+
+	if dbHost == "" || dbName == "" || dbPassword == "" || dbPort == "" || dbUser == "" {
+		return "", fmt.Errorf("❌ Algumas variáveis de ambiente não estão definidas! Verifique DATABASE_USER, DATABASE_PASSWORD, DATABASE_NAME, DATABASE_HOST, DATABASE_PORT")
+	}
+
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName), nil
+}
+
+// runMigrations executa as migrações automáticas para as tabelas do banco de dados.
+func runMigrations(db *gorm.DB) error {
+	return db.AutoMigrate(&models.Product{}, &models.User{}, &models.Sales{}, &models.SalesProduct{})
 }

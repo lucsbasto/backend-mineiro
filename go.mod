@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.10.0
+	github.com/golang-jwt/jwt/v4 v4.5.1
 	gorm.io/driver/postgres v1.5.11
 )
 

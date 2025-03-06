@@ -1,19 +1,24 @@
 package models
 
-import "time"
+import (
+	"time"
 
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+// Product representa um produto.
 type Product struct {
 	ID        string    `gorm:"primaryKey" json:"id"`
 	Type      string    `json:"type"`
-	Price     float64   `json:"price"`
-	Quantity  int       `json:"quantity"`
-	Sold      *int      `json:"sold"`
-	Returned  *int      `json:"returned"`
-	UnitCost  float64   `json:"unit_cost"`
-	Revenue   *float64  `json:"revenue"`
-	TotalCost *float64  `json:"total_cost"`
-	Profit    *float64  `json:"profit"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	DeletedAt *time.Time `gorm:"index" json:"deleted_at"`
+	DeletedAt *time.Time `gorm:"index" json:"deleted_at,omitempty"`
+	SalesProducts []SalesProduct `gorm:"foreignKey:ProductID" json:"sales_products"`
+}
+
+// BeforeCreate gera um ID único para o produto antes de criá-lo.
+func (product *Product) BeforeCreate(tx *gorm.DB) (err error) {
+	product.ID = uuid.New().String()
+	return nil
 }
