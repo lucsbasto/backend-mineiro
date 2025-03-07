@@ -1,8 +1,6 @@
 package repositories
 
 import (
-	"fmt"
-
 	"gorm.io/gorm"
 
 	"github.com/lucsbasto/backend-mineiro/models"
@@ -11,7 +9,7 @@ import (
 type SalesRepository interface {
 	Create(sale *models.Sales) error
 	FindByID(saleId string) (*models.Sales, error)
-	FindAll() ([]models.Sales, error)
+	FindAll(isAdmin bool, userId string) ([]models.Sales, error)
 	FindByFormattedDate(date string) ([]models.Sales, error)
 	Update(sale *models.Sales) error
 	Delete(saleId string) error
@@ -20,11 +18,22 @@ type SalesRepository interface {
 	CreateInTransaction(tx *gorm.DB, sale *models.Sales) error
 	Commit(tx *gorm.DB) error
 	Rollback(tx *gorm.DB) error
+	UpdateProducts(products []models.Product) error
 }
 
 type salesRepository struct {
 	db *gorm.DB
 }
+
+func (r *salesRepository) UpdateProducts(products []models.Product) error {
+	for _, product := range products {
+		if err := r.db.Model(&product).Association("Sales").Append(product.Sales); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 
 func NewSalesRepository(db *gorm.DB) *salesRepository {
 	return &salesRepository{db: db}
@@ -39,16 +48,21 @@ func (r *salesRepository) FindByID(saleId string) (*models.Sales, error) {
 	if err := r.db.Preload("User").Preload("SalesProducts").Preload("SalesProducts.Product").First(&sale, "id = ?", saleId).Error; err != nil {
 		return nil, err
 	}
-	fmt.Printf("Sale: %+v\n", sale)
 	return &sale, nil
 }
 
-func (r *salesRepository) FindAll() ([]models.Sales, error) {
+func (r *salesRepository) FindAll(isAdmin bool, userId string) ([]models.Sales, error) {
 	var sales []models.Sales
-	if err := r.db.Preload("User").Preload("SalesProducts").Preload("SalesProducts.Product").
-		Find(&sales).Error; err != nil {
-		return nil, err
+	if isAdmin {
+		if err := r.db.Preload("User").Preload("Products").Find(&sales).Error; err != nil {
+			return nil, err
+		}
+		return sales, nil
 	}
+	if err := r.db.Preload("User").Preload("Products").Where("user_id = ?", userId).
+	Find(&sales).Error; err != nil {
+	return nil, err
+}
 	return sales, nil
 }
 

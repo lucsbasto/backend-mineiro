@@ -7,64 +7,72 @@ import (
 
 type SalesService struct {
 	salesRepo       repositories.SalesRepository
-	salesProductRepo repositories.SalesProductRepository
+	productRepo repositories.ProductRepository
 }
 
-func NewSalesService(salesRepo repositories.SalesRepository, salesProductRepo repositories.SalesProductRepository) *SalesService {
-	return &SalesService{salesRepo: salesRepo, salesProductRepo: salesProductRepo}
+func NewSalesService(salesRepo repositories.SalesRepository, productRepo repositories.ProductRepository) *SalesService {
+	return &SalesService{salesRepo: salesRepo, productRepo: productRepo}
 }
 
 func (s *SalesService) CreateSale(sale *models.Sales) error {
+	// Crie a venda
 	if err := s.salesRepo.Create(sale); err != nil {
 		return err
 	}
 
-	for _, sp := range sale.SalesProducts {
-		sp.SaleID = sale.ID
-		if err := s.salesProductRepo.Create(&sp); err != nil {
-			return err
-		}
+	// Associe os produtos à venda
+	for i := range sale.Products {
+		// Atribua o ID da venda ao produto
+		sale.Products[i].Sales = append(sale.Products[i].Sales, *sale)
+	}
+
+	// Atualize os produtos associados
+	if err := s.salesRepo.UpdateProducts(sale.Products); err != nil {
+		return err
 	}
 
 	return nil
 }
+
 
 func (s *SalesService) CreateSaleWithProducts(sale *models.Sales) error {
 	tx, err := s.salesRepo.BeginTransaction()
 	if err != nil {
-		return err
+			return err
 	}
 	defer tx.Rollback()
 
+	// Crie a venda primeiro
 	saleErr := s.salesRepo.CreateInTransaction(tx, sale)
-	for _, sp := range sale.SalesProducts {
-		sp.SaleID = sale.ID
-		spErr := s.salesProductRepo.CreateInTransaction(tx, &sp)
-		if spErr != nil {
-			return spErr
-		}
+	if saleErr != nil {
+			return saleErr
+	}
+
+	// Agora que a venda foi criada, associamos os produtos
+	for _, product := range sale.Products {
+			// Crie o produto se ele não existir
+			productErr := s.productRepo.CreateInTransaction(tx, &product)
+			if productErr != nil {
+					return productErr
+			}
 	}
 
 	commitErr := tx.Commit().Error
-
-	if saleErr != nil {
-		return saleErr
-	}
-
 	if commitErr != nil {
-		return commitErr
+			return commitErr
 	}
 
 	return nil
 }
+
 
 func (s *SalesService) FindSaleByID(saleId string) (*models.Sales, error) {
 
 	return s.salesRepo.FindByID(saleId)
 }
 
-func (s *SalesService) FindAll() ([]models.Sales, error) {
-	return s.salesRepo.FindAll()
+func (s *SalesService) FindAll(isAdmin bool, userId string) ([]models.Sales, error) {
+	return s.salesRepo.FindAll(isAdmin, userId)
 }
 
 func (s *SalesService) FindSalesByFormattedDate(date string) ([]models.Sales, error) {

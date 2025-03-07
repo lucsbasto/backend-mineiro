@@ -6,24 +6,24 @@ import (
 	"gorm.io/gorm"
 )
 
-// SalesProduct representa uma linha de venda de um produto.
 type SalesProduct struct {
-	SaleID    string    `gorm:"primaryKey;not null" json:"sale_id"`
-	ProductID string    `gorm:"primaryKey;not null" json:"product_id"`
-	Quantity  int       `json:"quantity"`  // Quantidade do produto na venda
-	Sold      int       `json:"sold"`      // Quantidade vendida
-	Returned  int       `json:"returned"`  // Quantidade retornada
-	UnitCost  float64   `json:"unit_cost"` // Custo unitário do produto
-	Price     float64   `json:"price"`     // Preço do produto nesta venda
-	Total     float64   `json:"total"`     // Total da linha de venda (Sold * Price)
-	TotalCost float64   `json:"total_cost"`// Total do custo (Sold * UnitCost)
-	Revenue   float64   `json:"revenue"`   // Receita (Total)
-	Profit    float64   `json:"profit"`    // Lucro (Revenue - TotalCost)
+	SaleID    string    `gorm:"primaryKey;not null" json:"sale_id"`    // Chave estrangeira para Sales
+	ProductID string    `gorm:"primaryKey;not null" json:"product_id"` // Chave estrangeira para Product
+	Quantity  int       `json:"quantity"`  
+	Sold      int       `json:"sold"`      
+	Returned  int       `json:"returned"`  
+	UnitCost  float64   `json:"unit_cost"` 
+	Price     float64   `json:"price"`     
+	Total     float64   `json:"total"`
+	TotalCost float64   `json:"total_cost"` 
+	Revenue   float64   `json:"revenue"`   
+	Profit    float64   `json:"profit"`    
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Sale      Sales     `gorm:"foreignKey:SaleID" json:"-"`
 	Product   Product   `gorm:"foreignKey:ProductID"`
 }
+
 
 // BeforeCreate calcula os totais baseados nas quantidades de produtos vendidos.
 func (sp *SalesProduct) BeforeCreate(tx *gorm.DB) (err error) {

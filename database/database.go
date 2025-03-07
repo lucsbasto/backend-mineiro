@@ -21,7 +21,7 @@ func Connect() {
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("❌ Erro ao conectar ao banco de dados:", err)
+		log.Fatal("❌ Erro ao conectar ao banco de dados: ", err)
 	}
 
 	DB = db
@@ -29,7 +29,7 @@ func Connect() {
 
 	err = runMigrations(db)
 	if err != nil {
-		log.Fatal("❌ Erro ao rodar migrations:", err)
+		log.Fatal("❌ Erro ao rodar migrations: ", err)
 	}
 }
 
@@ -50,5 +50,5 @@ func getDSN() (string, error) {
 
 // runMigrations executa as migrações automáticas para as tabelas do banco de dados.
 func runMigrations(db *gorm.DB) error {
-	return db.AutoMigrate(&models.Product{}, &models.User{}, &models.Sales{}, &models.SalesProduct{})
+	return db.AutoMigrate(&models.User{}, &models.Product{}, &models.Sales{}, &models.SalesProduct{})
 }

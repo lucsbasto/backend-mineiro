@@ -28,8 +28,8 @@ func InitializeProductDependencies() (*controllers.ProductController, error) {
 
 func InitializeSalesDependencies() (*controllers.SalesController, error) {
 	salesRepo := repositories.NewSalesRepository(database.DB)
-	salesProductRepo := repositories.NewSalesProductRepository(database.DB)
-	salesService := services.NewSalesService(salesRepo, salesProductRepo)
+	productRepo := repositories.NewProductRepository(database.DB)
+	salesService := services.NewSalesService(salesRepo, productRepo)
 	salesController := controllers.NewSalesController(salesService)
 
 	return salesController, nil

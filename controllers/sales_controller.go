@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lucsbasto/backend-mineiro/controllers/dtos"
 	"github.com/lucsbasto/backend-mineiro/models"
 	"github.com/lucsbasto/backend-mineiro/services"
 )
@@ -16,36 +16,56 @@ type SalesController struct {
 func NewSalesController(service *services.SalesService) *SalesController {
 	return &SalesController{service: service}
 }
-
 func (c *SalesController) Create(ctx *gin.Context) {
-	var sale models.Sales
-	if err := ctx.BindJSON(&sale); err != nil {
-		ctx.JSON(400, gin.H{"error": "Erro ao ler dados da venda"})
-		return
+	var data dtos.CreateSaleDTO
+	if err := ctx.BindJSON(&data); err != nil {
+			ctx.JSON(400, gin.H{"error": "Erro ao ler dados da venda"})
+			return
 	}
 
-	// Recupera o usuário autenticado do contexto
+	// Obtenha o usuário do token
+	user, ok := ctx.Get("user")
+	if !ok {
+			ctx.JSON(401, gin.H{"error": "Usuário não autenticado"})
+			return
+	}
+	u := user.(models.User)
+
+	// Crie a venda
+	sale := &models.Sales{
+			UserID: u.ID,
+	}
+
+	// Crie os produtos para a venda
+	products := make([]models.Product, 0)
+	for _, p := range data.Products {
+			product := models.Product{
+					ID: p.ProductID,
+			}
+			products = append(products, product)
+	}
+	sale.Products = products
+
+	// Chame o serviço para criar a venda e os produtos
+	err := c.service.CreateSaleWithProducts(sale)
+	if err != nil {
+			ctx.JSON(500, gin.H{"error": "Erro ao criar venda"})
+			return
+	}
+
+	ctx.JSON(201, gin.H{"message": "Venda criada com sucesso"})
+}
+
+
+
+func (c *SalesController) ListAll(ctx *gin.Context) {
 	user, ok := ctx.Get("user")
 	if !ok {
 		ctx.JSON(401, gin.H{"error": "Usuário não autenticado"})
 		return
 	}
 	u := user.(models.User)
-
-	// Associa o usuário à venda
-	sale.UserID = u.ID
-
-	if err := c.service.CreateSaleWithProducts(&sale); err != nil {
-		ctx.JSON(500, gin.H{"error": "Erro ao criar venda"})
-		return
-	}
-
-	ctx.JSON(201, gin.H{"message": "Venda criada com sucesso"})
-}
-
-func (c *SalesController) ListAll(ctx *gin.Context) {
-	sales, err := c.service.FindAll()
-	fmt.Println(sales)
+	sales, err := c.service.FindAll(u.IsAdmin, u.ID)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Erro ao listar vendas"})
 		return
