@@ -20,7 +20,7 @@ type SalesProduct struct {
 	Profit    float64   `json:"profit"`    
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	Sale      Sales     `gorm:"foreignKey:SaleID" json:"-"`
+	Sale      Sales     `gorm:"foreignKey:SaleID"`
 	Product   Product   `gorm:"foreignKey:ProductID"`
 }
 

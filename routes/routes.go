@@ -42,10 +42,16 @@ func SetupRoutes(r *gin.Engine, controllers Controllers, db *gorm.DB) {
 	salesRoutes := protectedRoutes.Group("/sales")
 	{
 		salesRoutes.GET("/", controllers.SalesController.ListAll)
-		salesRoutes.GET("/by-date/:date", controllers.SalesController.ListByFormattedDate)
-		salesRoutes.GET("/:id", controllers.SalesController.ListOne)
+		// salesRoutes.GET("/:id", controllers.SalesController.ListOne)
 		salesRoutes.POST("/", controllers.SalesController.Create)
-		salesRoutes.PUT("/:id", controllers.SalesController.Update)
-		salesRoutes.DELETE("/:id", controllers.SalesController.Delete)
+		// salesRoutes.PUT("/:id", controllers.SalesController.Update)
+		// salesRoutes.DELETE("/:id", controllers.SalesController.Delete)
+	}
+
+	// Rotas para vendas
+	salesProductsRoutes := protectedRoutes.Group("/sales-products")
+	{
+		salesProductsRoutes.GET("/", controllers.SalesProductController.ListAll)
+		salesProductsRoutes.GET("/by-date/:date", controllers.SalesProductController.ListByFormattedDate)
 	}
 }

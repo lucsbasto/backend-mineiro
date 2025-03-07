@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/lucsbasto/backend-mineiro/controllers/dtos"
 	"github.com/lucsbasto/backend-mineiro/models"
 	"github.com/lucsbasto/backend-mineiro/repositories"
 )
@@ -14,57 +15,53 @@ func NewSalesService(salesRepo repositories.SalesRepository, productRepo reposit
 	return &SalesService{salesRepo: salesRepo, productRepo: productRepo}
 }
 
-func (s *SalesService) CreateSale(sale *models.Sales) error {
-	// Crie a venda
-	if err := s.salesRepo.Create(sale); err != nil {
+func (s *SalesService) CreateSale(dto *dtos.CreateSaleDTO, userID string) error {
+	// Criar a venda
+	sale := models.Sales{
+		UserID:    userID,  // Agora associamos o userID à venda
+		TotalRevenue: 0.0,  // Total inicial, pode ser calculado depois
+	}
+
+	// Chama o repositório para salvar a venda
+	if err := s.salesRepo.Create(&sale); err != nil {
 		return err
 	}
 
-	// Associe os produtos à venda
-	for i := range sale.Products {
-		// Atribua o ID da venda ao produto
-		sale.Products[i].Sales = append(sale.Products[i].Sales, *sale)
-	}
+	// Processa os produtos da venda
+	var totalRevenue float64
+	for _, productDTO := range dto.Products {
+		product := models.Product{
+			ID:        productDTO.ProductID,
+		}
 
-	// Atualize os produtos associados
-	if err := s.salesRepo.UpdateProducts(sale.Products); err != nil {
-		return err
-	}
+		// Cria o produto e associa à venda
+		salesProduct := models.SalesProduct{
+			SaleID:    sale.ID,
+			ProductID: product.ID,
+			Quantity:  productDTO.Quantity,
+			Sold:      productDTO.Sold,
+			Returned:  productDTO.Returned,
+			UnitCost:  productDTO.UnitCost,
+			Price:     productDTO.Price,
+		}
 
-	return nil
-}
-
-
-func (s *SalesService) CreateSaleWithProducts(sale *models.Sales) error {
-	tx, err := s.salesRepo.BeginTransaction()
-	if err != nil {
+		// Cria o produto relacionado à venda no banco
+		if err := s.salesRepo.CreateSalesProduct(&salesProduct); err != nil {
 			return err
-	}
-	defer tx.Rollback()
+		}
 
-	// Crie a venda primeiro
-	saleErr := s.salesRepo.CreateInTransaction(tx, sale)
-	if saleErr != nil {
-			return saleErr
+		// Calcula a receita total da venda
+		totalRevenue += salesProduct.Revenue
 	}
 
-	// Agora que a venda foi criada, associamos os produtos
-	for _, product := range sale.Products {
-			// Crie o produto se ele não existir
-			productErr := s.productRepo.CreateInTransaction(tx, &product)
-			if productErr != nil {
-					return productErr
-			}
-	}
-
-	commitErr := tx.Commit().Error
-	if commitErr != nil {
-			return commitErr
+	// Atualiza a venda com o total de receita
+	sale.TotalRevenue = totalRevenue
+	if err := s.salesRepo.Update(&sale); err != nil {
+		return err
 	}
 
 	return nil
 }
-
 
 func (s *SalesService) FindSaleByID(saleId string) (*models.Sales, error) {
 
@@ -75,14 +72,10 @@ func (s *SalesService) FindAll(isAdmin bool, userId string) ([]models.Sales, err
 	return s.salesRepo.FindAll(isAdmin, userId)
 }
 
-func (s *SalesService) FindSalesByFormattedDate(date string) ([]models.Sales, error) {
-	return s.salesRepo.FindByFormattedDate(date)
-}
-
 func (s *SalesService) UpdateSale(sale *models.Sales) error {
 	return s.salesRepo.Update(sale)
 }
 
-func (s *SalesService) DeleteSale(saleId string) error {
-	return s.salesRepo.Delete(saleId)
-}
+// func (s *SalesService) DeleteSale(saleId string) error {
+// 	return s.salesRepo.Delete(saleId)
+// }

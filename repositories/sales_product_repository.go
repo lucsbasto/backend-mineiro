@@ -7,11 +7,8 @@ import (
 )
 
 type SalesProductRepository interface {
-	Create(salesProduct *models.SalesProduct) error
-	BeginTransaction() (*gorm.DB, error)
-	CreateInTransaction(tx *gorm.DB, salesProduct *models.SalesProduct) error
-	Commit(tx *gorm.DB) error
-	Rollback(tx *gorm.DB) error
+	FindAll() ([]models.SalesProduct, error)
+	FindByFormattedDate(date string, isAdmin bool, userId string) ([]models.SalesProduct, error) 
 }
 
 type salesProductRepository struct {
@@ -22,22 +19,29 @@ func NewSalesProductRepository(db *gorm.DB) *salesProductRepository {
 	return &salesProductRepository{db: db}
 }
 
-func (r *salesProductRepository) Create(salesProduct *models.SalesProduct) error {
-	return r.db.Create(salesProduct).Error
+func (r *salesProductRepository) FindAll() ([]models.SalesProduct, error) {
+	var salesProducts []models.SalesProduct
+	if err := r.db.Preload("Product").Preload("Sales").Find(&salesProducts).Error; err != nil {
+		return nil, err
+	}
+	return salesProducts, nil
 }
 
-func (r *salesProductRepository) BeginTransaction() (*gorm.DB, error) {
-	return r.db.Begin(), nil
-}
+func (r *salesProductRepository) FindByFormattedDate(date string, isAdmin bool, userId string) ([]models.SalesProduct, error) {
+	var salesProduct []models.SalesProduct
+	query := r.db.Preload("Product").Preload("Sale").Preload("Sale.User")
 
-func (r *salesProductRepository) CreateInTransaction(tx *gorm.DB, salesProduct *models.SalesProduct) error {
-	return tx.Create(salesProduct).Error
-}
+	if !isAdmin {
+		// Se não for admin, filtra pelo user_id
+		query = query.Joins("JOIN sales ON sales.id = sales_products.sale_id").
+			Where("sales.user_id = ?", userId)
+	}
 
-func (r *salesProductRepository) Commit(tx *gorm.DB) error {
-	return tx.Commit().Error
-}
+	err := query.Where("TO_CHAR(sales_products.created_at, 'YYYY-MM-DD') = ?", date).
+		Find(&salesProduct).Error
 
-func (r *salesProductRepository) Rollback(tx *gorm.DB) error {
-	return tx.Rollback().Error
+	if err != nil {
+		return nil, err
+	}
+	return salesProduct, nil
 }

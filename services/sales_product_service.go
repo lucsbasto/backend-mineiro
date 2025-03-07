@@ -13,6 +13,10 @@ func NewSalesProductService(repo repositories.SalesProductRepository) *SalesProd
 	return &SalesProductService{repo: repo}
 }
 
-func (s *SalesProductService) CreateSalesProduct(salesProduct *models.SalesProduct) error {
-	return s.repo.Create(salesProduct)
+func (s *SalesProductService) FindAll() ([]models.SalesProduct, error) {
+	return s.repo.FindAll()
+}	
+
+func (s *SalesProductService) FindSalesByFormattedDate(date string, isAdmin bool, userId string) ([]models.SalesProduct, error) {
+	return s.repo.FindByFormattedDate(date, isAdmin, userId)
 }

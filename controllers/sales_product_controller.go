@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/lucsbasto/backend-mineiro/models"
 	"github.com/lucsbasto/backend-mineiro/services"
@@ -14,15 +16,34 @@ func NewSalesProductController(service *services.SalesProductService) *SalesProd
 	return &SalesProductController{service: service}
 }
 
-func (c *SalesProductController) Create(ctx *gin.Context) {
-	var salesProduct models.SalesProduct
-	if err := ctx.BindJSON(&salesProduct); err != nil {
-		ctx.JSON(400, gin.H{"error": "Erro ao ler dados da linha de venda"})
+func (c *SalesProductController) ListAll(ctx *gin.Context) {
+	salesProducts, err := c.service.FindAll()
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Erro ao listar vendas"})
 		return
 	}
-	if err := c.service.CreateSalesProduct(&salesProduct); err != nil {
-		ctx.JSON(500, gin.H{"error": "Erro ao criar linha de venda"})
+	ctx.JSON(200, salesProducts)
+}
+
+
+func (c *SalesProductController) ListByFormattedDate(ctx *gin.Context) {
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(401, gin.H{"error": "Usuário não autenticado"})
 		return
 	}
-	ctx.JSON(201, gin.H{"message": "Linha de venda criada com sucesso"})
+	u := user.(models.User)
+	
+	dateStr := ctx.Param("date")
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Erro ao parsear data"})
+		return
+	}
+	sales, err := c.service.FindSalesByFormattedDate(date.Format("2006-01-02"), u.IsAdmin, u.ID)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Erro ao listar vendas"})
+		return
+	}
+	ctx.JSON(200, sales)
 }
