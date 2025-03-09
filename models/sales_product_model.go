@@ -16,7 +16,6 @@ type SalesProduct struct {
 	Returned  int       `json:"returned"`  
 	UnitCost  float64   `json:"unit_cost"` 
 	Price     float64   `json:"price"`     
-	Total     float64   `json:"total"`
 	TotalCost float64   `json:"total_cost"` 
 	Revenue   float64   `json:"revenue"`   
 	Profit    float64   `json:"profit"`    
@@ -27,9 +26,8 @@ type SalesProduct struct {
 }
 
 func (sp *SalesProduct) BeforeUpdate(tx *gorm.DB) (err error) {
-	sp.Total = float64(sp.Sold) * sp.Price
 	sp.TotalCost = float64(sp.Sold) * sp.UnitCost
-	sp.Revenue = sp.Total
+	sp.Revenue = float64(sp.Sold) * sp.Price
 	sp.Profit = sp.Revenue - sp.TotalCost
 	sp.UpdatedAt = time.Now()
 	return nil
@@ -37,9 +35,8 @@ func (sp *SalesProduct) BeforeUpdate(tx *gorm.DB) (err error) {
 
 func (sp *SalesProduct) BeforeCreate(tx *gorm.DB) (err error) {
 	sp.ID = uuid.New().String()
-	sp.Total = float64(sp.Sold) * sp.Price
 	sp.TotalCost = float64(sp.Sold) * sp.UnitCost
-	sp.Revenue = sp.Total
+	sp.Revenue = float64(sp.Sold) * sp.Price
 	sp.Profit = sp.Revenue - sp.TotalCost
 	return nil
 }
