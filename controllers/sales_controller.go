@@ -63,44 +63,14 @@ func (c *SalesController) ListAll(ctx *gin.Context) {
 }
 
 
-// func (c *SalesController) ListOne(ctx *gin.Context) {
+func (c *SalesController) ListOne(ctx *gin.Context) {
 	
-// 	id := ctx.Param("id")
-// 	sale, err := c.service.FindSaleByID(id)
-// 	if err != nil {
-// 		ctx.JSON(404, gin.H{"error": "Venda não encontrada"})
-// 		return
-// 	}
-// 	ctx.JSON(200, sale)
-// }
+	id := ctx.Param("id")
+	sale, err := c.service.FindSaleByID(id)
+	if err != nil {
+		ctx.JSON(404, gin.H{"error": "Venda não encontrada"})
+		return
+	}
+	ctx.JSON(200, sale)
+}
 
-// func (c *SalesController) Update(ctx *gin.Context) {
-// 	id := ctx.Param("id")
-// 	var sale models.Sales
-// 	if err := ctx.BindJSON(&sale); err != nil {
-// 		ctx.JSON(400, gin.H{"error": "Erro ao ler dados da venda"})
-// 		return
-// 	}
-
-// 	existingSale, err := c.service.FindSaleByID(id)
-// 	if err != nil {
-// 		ctx.JSON(404, gin.H{"error": "Venda não encontrada"})
-// 		return
-// 	}
-
-// 	sale.ID = existingSale.ID
-// 	if err := c.service.UpdateSale(&sale); err != nil {
-// 		ctx.JSON(500, gin.H{"error": "Erro ao atualizar venda"})
-// 		return
-// 	}
-// 	ctx.JSON(200, gin.H{"message": "Venda atualizada com sucesso"})
-// }
-
-// func (c *SalesController) Delete(ctx *gin.Context) {
-// 	id := ctx.Param("id")
-// 	if err := c.service.DeleteSale(id); err != nil {
-// 		ctx.JSON(500, gin.H{"error": "Erro ao excluir venda"})
-// 		return
-// 	}
-// 	ctx.JSON(200, gin.H{"message": "Venda excluída com sucesso"})
-// }

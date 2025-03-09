@@ -3,10 +3,12 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type SalesProduct struct {
+	ID        string    `gorm:"primaryKey" json:"id"`
 	SaleID    string    `gorm:"primaryKey;not null" json:"sale_id"`    // Chave estrangeira para Sales
 	ProductID string    `gorm:"primaryKey;not null" json:"product_id"` // Chave estrangeira para Product
 	Quantity  int       `json:"quantity"`  
@@ -24,9 +26,17 @@ type SalesProduct struct {
 	Product   Product   `gorm:"foreignKey:ProductID"`
 }
 
+func (sp *SalesProduct) BeforeUpdate(tx *gorm.DB) (err error) {
+	sp.Total = float64(sp.Sold) * sp.Price
+	sp.TotalCost = float64(sp.Sold) * sp.UnitCost
+	sp.Revenue = sp.Total
+	sp.Profit = sp.Revenue - sp.TotalCost
+	sp.UpdatedAt = time.Now()
+	return nil
+}
 
-// BeforeCreate calcula os totais baseados nas quantidades de produtos vendidos.
 func (sp *SalesProduct) BeforeCreate(tx *gorm.DB) (err error) {
+	sp.ID = uuid.New().String()
 	sp.Total = float64(sp.Sold) * sp.Price
 	sp.TotalCost = float64(sp.Sold) * sp.UnitCost
 	sp.Revenue = sp.Total

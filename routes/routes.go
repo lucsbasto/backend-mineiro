@@ -53,5 +53,7 @@ func SetupRoutes(r *gin.Engine, controllers Controllers, db *gorm.DB) {
 	{
 		salesProductsRoutes.GET("/", controllers.SalesProductController.ListAll)
 		salesProductsRoutes.GET("/by-date/:date", controllers.SalesProductController.ListByFormattedDate)
+		salesProductsRoutes.GET("/:id", controllers.SalesProductController.ListOne)
+		salesProductsRoutes.PATCH("/:id", controllers.SalesProductController.Update)
 	}
 }
