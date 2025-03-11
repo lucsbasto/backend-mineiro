@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/lucsbasto/backend-mineiro/controllers"
 	"github.com/lucsbasto/backend-mineiro/middlewares"
@@ -17,6 +18,14 @@ type Controllers struct {
 
 // SetupRoutes configura as rotas para o servidor.
 func SetupRoutes(r *gin.Engine, controllers Controllers, db *gorm.DB) {
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"}
+	config.AllowMethods = []string{"GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"}
+	config.AllowHeaders = []string{"Content-Type", "*"}
+
+	// Aplicar CORS em todas as rotas
+	r.Use(cors.New(config))
+
 	// Rotas para autenticação (públicas)
 	authRoutes := r.Group("/auth")
 	{
@@ -48,8 +57,8 @@ func SetupRoutes(r *gin.Engine, controllers Controllers, db *gorm.DB) {
 		// salesRoutes.DELETE("/:id", controllers.SalesController.Delete)
 	}
 
-	// Rotas para vendas
-	salesProductsRoutes := protectedRoutes.Group("/sales-products")
+	// Rotas para vendas de produtos
+	salesProductsRoutes := r.Group("/sales-products")
 	{
 		salesProductsRoutes.GET("/", controllers.SalesProductController.ListAll)
 		salesProductsRoutes.GET("/by-date/:date", controllers.SalesProductController.ListByFormattedDate)
