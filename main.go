@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	// configs.Init()
 	// Conectar ao banco de dados
 	database.Connect()
 

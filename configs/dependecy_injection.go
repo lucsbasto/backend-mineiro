@@ -8,7 +8,7 @@ import (
 )
 
 func InitializeAuthDependencies() (*controllers.AuthController, error) {
-	Init()
+	// Init()
 	userRepo := repositories.NewUserRepository(database.DB)
 	authService := services.NewAuthService(userRepo)
 	authController := controllers.NewAuthController(authService)
