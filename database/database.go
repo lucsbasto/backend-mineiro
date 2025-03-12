@@ -15,12 +15,17 @@ var DB *gorm.DB
 
 // Connect estabelece a conexão com o banco de dados.
 func Connect() {
-	dsn, err := getDSN()
-	if err != nil {
-		log.Fatal(err)
+	// dsn, err := getDSN()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	dbUrl := os.Getenv("DATABASE_URL")
+
+	if dbUrl == "" {
+		fmt.Errorf("❌ Algumas variáveis de ambiente não estão definidas! Verifique DATABASE_URL")
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.Open(dbUrl), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
@@ -36,7 +41,6 @@ func Connect() {
 	}
 }
 
-// getDSN constrói a string de conexão DSN a partir das variáveis de ambiente.
 func getDSN() (string, error) {
 	dbHost := os.Getenv("DATABASE_HOST")
 	dbUser := os.Getenv("DATABASE_USER")

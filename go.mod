@@ -4,13 +4,13 @@ go 1.24.0
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	gorm.io/driver/postgres v1.5.11
 )
 
 require (
-	github.com/gin-contrib/cors v1.7.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.5.5 // indirect
@@ -18,7 +18,12 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/rogpeppe/go-internal v1.8.0 // indirect
+	github.com/supabase-community/functions-go v0.0.0-20220927045802-22373e6cb51d // indirect
+	github.com/supabase-community/gotrue-go v1.2.0 // indirect
+	github.com/supabase-community/postgrest-go v0.0.11 // indirect
+	github.com/supabase-community/storage-go v0.7.0 // indirect
+	github.com/supabase-community/supabase-go v0.0.4 // indirect
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 )
 

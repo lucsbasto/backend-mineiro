@@ -21,14 +21,10 @@ func (s *SalesService) CreateSale(dto *dtos.CreateSaleDTO, userID string) error 
 		UserID:    userID,  // Agora associamos o userID à venda
 		TotalRevenue: 0.0,  // Total inicial, pode ser calculado depois
 	}
-
-	// Chama o repositório para salvar a venda
 	if err := s.salesRepo.Create(&sale); err != nil {
 		return err
 	}
 
-	// Processa os produtos da venda
-	var totalRevenue float64
 	for _, productDTO := range dto.Products {
 		product := models.Product{
 			ID:        productDTO.ProductID,
@@ -39,27 +35,14 @@ func (s *SalesService) CreateSale(dto *dtos.CreateSaleDTO, userID string) error 
 			SaleID:    sale.ID,
 			ProductID: product.ID,
 			Quantity:  productDTO.Quantity,
-			Sold:      productDTO.Sold,
-			Returned:  productDTO.Returned,
 			UnitCost:  productDTO.UnitCost,
 			Price:     productDTO.Price,
 		}
 
-		// Cria o produto relacionado à venda no banco
 		if err := s.salesRepo.CreateSalesProduct(&salesProduct); err != nil {
 			return err
 		}
-
-		// Calcula a receita total da venda
-		totalRevenue += salesProduct.Revenue
 	}
-
-	// Atualiza a venda com o total de receita
-	sale.TotalRevenue = totalRevenue
-	if err := s.salesRepo.Update(&sale); err != nil {
-		return err
-	}
-
 	return nil
 }
 

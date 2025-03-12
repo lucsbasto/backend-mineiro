@@ -26,14 +26,17 @@ func (s *SalesProductService) FindSalesByFormattedDate(date string, isAdmin bool
 	var salesResponse []dtos.SaleResponseDto 
 	for _, sale := range salesProduct {
 		salesResponse = append(salesResponse, dtos.SaleResponseDto{
+			ID:        sale.ID,
 			SaleId:    sale.SaleID,
-			Type: 		 sale.Product.Type,
+			Type: 	   sale.Product.Type,
 			ProductId: sale.ProductID,
 			Price:     sale.Price,
 			Quantity:  sale.Quantity,
 			Sold:      sale.Sold,
+			Revenue:   sale.Revenue,
 			Returned:  sale.Returned,
 			UnitCost:  sale.UnitCost,
+			
 			TotalCost: CalculateTotalCost(&sale),
 			Profit: 	CalculateProfit(&sale),
 		})

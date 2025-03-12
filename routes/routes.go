@@ -18,10 +18,12 @@ type Controllers struct {
 
 // SetupRoutes configura as rotas para o servidor.
 func SetupRoutes(r *gin.Engine, controllers Controllers, db *gorm.DB) {
+	// Configurações CORS para permitir todas as origens
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}
-	config.AllowMethods = []string{"GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"}
-	config.AllowHeaders = []string{"Content-Type", "*"}
+	config.AllowAllOrigins = true   // Permitir todas as origens
+	config.AllowMethods = []string{"GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"} // Permitir todos os métodos
+	config.AllowHeaders = []string{"Content-Type", "Authorization", "X-Requested-With"} // Permitir todos os cabeçalhos
+	config.AllowCredentials = true // Permitir cookies (se necessário)
 
 	// Aplicar CORS em todas as rotas
 	r.Use(cors.New(config))
@@ -58,7 +60,7 @@ func SetupRoutes(r *gin.Engine, controllers Controllers, db *gorm.DB) {
 	}
 
 	// Rotas para vendas de produtos
-	salesProductsRoutes := r.Group("/sales-products")
+	salesProductsRoutes := protectedRoutes.Group("/sales-products")
 	{
 		salesProductsRoutes.GET("/", controllers.SalesProductController.ListAll)
 		salesProductsRoutes.GET("/by-date/:date", controllers.SalesProductController.ListByFormattedDate)
