@@ -52,6 +52,8 @@ func (c *SalesProductController) Update(ctx *gin.Context) {
 		ctx.JSON(500, gin.H{"error": "Erro ao buscar venda"})
 		return
 	}
+	fmt.Println("salesProduct: ", salesProduct)
+
 	if user.IsAdmin {
 		salesProduct.Quantity = helpers.Coalesce(*dto.Quantity, salesProduct.Quantity)
 		salesProduct.Sold = helpers.Coalesce(*dto.Sold, salesProduct.Sold)
@@ -62,7 +64,6 @@ func (c *SalesProductController) Update(ctx *gin.Context) {
 		salesProduct.Returned = helpers.Coalesce(*dto.Returned, salesProduct.Returned)
 		salesProduct.Sold = helpers.Coalesce(*dto.Sold, salesProduct.Sold)
 	}
-	fmt.Println("salesProduct: ", salesProduct)
 	if err := c.service.Update(salesProduct); err != nil {
 		ctx.JSON(500, gin.H{"error": "Erro ao atualizar venda"})
 		return
